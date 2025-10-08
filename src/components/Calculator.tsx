@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { ItemSelector } from "@/components/ItemSelector";
 import { ImpactResults } from "@/components/ImpactResults";
-import { Smartphone, Laptop, Tablet, Monitor, Tv, Headphones } from "lucide-react";
+import { Smartphone, Laptop, Tablet, Monitor, Tv, Headphones, Cable, Fan, Plug } from "lucide-react";
 
 export interface ElectronicItem {
   id: string;
@@ -14,11 +14,13 @@ export interface ElectronicItem {
   energySaved: number; // kWh saved (base value)
   sizeOptions?: number[]; // Available sizes in inches
   sizeMultiplier?: (size: number) => number; // Function to calculate multiplier based on size
+  brandOptions?: string[]; // Available brands
 }
 
 export interface SelectedItem {
   quantity: number;
   size?: number; // Selected size in inches
+  brand?: string; // Selected brand
 }
 
 export const electronicItems: ElectronicItem[] = [
@@ -29,6 +31,7 @@ export const electronicItems: ElectronicItem[] = [
     co2Saved: 35,
     landfillReduced: 0.15,
     energySaved: 45,
+    brandOptions: ["Apple", "Samsung", "Google", "OnePlus", "Xiaomi", "Oppo", "Vivo", "Other"],
   },
   {
     id: "laptop",
@@ -37,6 +40,7 @@ export const electronicItems: ElectronicItem[] = [
     co2Saved: 180,
     landfillReduced: 2.5,
     energySaved: 320,
+    brandOptions: ["Apple", "Dell", "HP", "Lenovo", "Asus", "Acer", "Microsoft", "Other"],
   },
   {
     id: "tablet",
@@ -80,16 +84,40 @@ export const electronicItems: ElectronicItem[] = [
     landfillReduced: 0.08,
     energySaved: 15,
   },
+  {
+    id: "cables",
+    name: "Cables & Wires",
+    icon: Cable,
+    co2Saved: 2,
+    landfillReduced: 0.05,
+    energySaved: 3,
+  },
+  {
+    id: "chargers",
+    name: "Chargers",
+    icon: Plug,
+    co2Saved: 5,
+    landfillReduced: 0.1,
+    energySaved: 8,
+  },
+  {
+    id: "fans",
+    name: "Electric Fans",
+    icon: Fan,
+    co2Saved: 25,
+    landfillReduced: 1.2,
+    energySaved: 35,
+  },
 ];
 
 export const Calculator = () => {
   const [selectedItems, setSelectedItems] = useState<Map<string, SelectedItem>>(new Map());
   const [showResults, setShowResults] = useState(false);
 
-  const handleItemSelect = (itemId: string, quantity: number, size?: number) => {
+  const handleItemSelect = (itemId: string, quantity: number, size?: number, brand?: string) => {
     const newSelected = new Map(selectedItems);
     if (quantity > 0) {
-      newSelected.set(itemId, { quantity, size });
+      newSelected.set(itemId, { quantity, size, brand });
     } else {
       newSelected.delete(itemId);
     }
@@ -123,6 +151,11 @@ export const Calculator = () => {
   const handleCalculate = () => {
     if (selectedItems.size > 0) {
       setShowResults(true);
+      // Smooth scroll to results
+      setTimeout(() => {
+        const resultsElement = document.getElementById('impact-results');
+        resultsElement?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
     }
   };
 
@@ -152,8 +185,10 @@ export const Calculator = () => {
                   item={item}
                   quantity={selectedItem?.quantity || 0}
                   selectedSize={selectedItem?.size}
-                  onQuantityChange={(quantity) => handleItemSelect(item.id, quantity, selectedItem?.size)}
-                  onSizeChange={(size) => handleItemSelect(item.id, selectedItem?.quantity || 1, size)}
+                  selectedBrand={selectedItem?.brand}
+                  onQuantityChange={(quantity) => handleItemSelect(item.id, quantity, selectedItem?.size, selectedItem?.brand)}
+                  onSizeChange={(size) => handleItemSelect(item.id, selectedItem?.quantity || 1, size, selectedItem?.brand)}
+                  onBrandChange={(brand) => handleItemSelect(item.id, selectedItem?.quantity || 1, selectedItem?.size, brand)}
                 />
               );
             })}
@@ -184,11 +219,13 @@ export const Calculator = () => {
       </Card>
 
       {showResults && (
-        <ImpactResults
-          co2Saved={impact.totalCO2}
-          landfillReduced={impact.totalLandfill}
-          energySaved={impact.totalEnergy}
-        />
+        <div id="impact-results">
+          <ImpactResults
+            co2Saved={impact.totalCO2}
+            landfillReduced={impact.totalLandfill}
+            energySaved={impact.totalEnergy}
+          />
+        </div>
       )}
     </div>
   );

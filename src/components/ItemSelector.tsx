@@ -8,14 +8,17 @@ interface ItemSelectorProps {
   item: ElectronicItem;
   quantity: number;
   selectedSize?: number;
+  selectedBrand?: string;
   onQuantityChange: (quantity: number) => void;
   onSizeChange?: (size: number) => void;
+  onBrandChange?: (brand: string) => void;
 }
 
-export const ItemSelector = ({ item, quantity, selectedSize, onQuantityChange, onSizeChange }: ItemSelectorProps) => {
+export const ItemSelector = ({ item, quantity, selectedSize, selectedBrand, onQuantityChange, onSizeChange, onBrandChange }: ItemSelectorProps) => {
   const Icon = item.icon;
   const isSelected = quantity > 0;
   const hasSize = item.sizeOptions && item.sizeOptions.length > 0;
+  const hasBrand = item.brandOptions && item.brandOptions.length > 0;
 
   return (
     <Card
@@ -36,6 +39,26 @@ export const ItemSelector = ({ item, quantity, selectedSize, onQuantityChange, o
           </div>
           <h3 className="font-semibold text-center">{item.name}</h3>
           
+          {hasBrand && isSelected && (
+            <div className="w-full">
+              <Select
+                value={selectedBrand || ""}
+                onValueChange={(value) => onBrandChange?.(value)}
+              >
+                <SelectTrigger className="w-full bg-background">
+                  <SelectValue placeholder="Select brand" />
+                </SelectTrigger>
+                <SelectContent className="bg-popover z-50">
+                  {item.brandOptions!.map((brand) => (
+                    <SelectItem key={brand} value={brand}>
+                      {brand}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
           {hasSize && isSelected && (
             <div className="w-full">
               <Select

@@ -1,10 +1,16 @@
 import { Calculator } from "@/components/Calculator";
+import { ImpactProgressBar } from "@/components/ImpactProgressBar";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { Recycle, Leaf } from "lucide-react";
 import heroImage from "@/assets/hero-ewaste.jpg";
 
 const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/30">
+      {/* Theme Toggle */}
+      <div className="fixed top-4 right-4 z-50">
+        <ThemeToggle />
+      </div>
       {/* Hero Section */}
       <section className="relative py-20 px-4 overflow-hidden">
         <div 
@@ -30,6 +36,17 @@ const Index = () => {
             <Leaf className="w-5 h-5" />
             <span className="font-semibold">Make a difference, one device at a time</span>
           </div>
+        </div>
+      </section>
+
+      {/* Progress Bar Section */}
+      <section className="py-4 px-4">
+        <div className="max-w-6xl mx-auto">
+          <ImpactProgressBar 
+            co2Saved={0}
+            landfillReduced={0}
+            energySaved={0}
+          />
         </div>
       </section>
 
