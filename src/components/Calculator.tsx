@@ -9,9 +9,16 @@ export interface ElectronicItem {
   id: string;
   name: string;
   icon: typeof Smartphone;
-  co2Saved: number; // kg of CO2 saved by recycling
-  landfillReduced: number; // kg of waste diverted
-  energySaved: number; // kWh saved
+  co2Saved: number; // kg of CO2 saved by recycling (base value)
+  landfillReduced: number; // kg of waste diverted (base value)
+  energySaved: number; // kWh saved (base value)
+  sizeOptions?: number[]; // Available sizes in inches
+  sizeMultiplier?: (size: number) => number; // Function to calculate multiplier based on size
+}
+
+export interface SelectedItem {
+  quantity: number;
+  size?: number; // Selected size in inches
 }
 
 export const electronicItems: ElectronicItem[] = [
@@ -43,17 +50,27 @@ export const electronicItems: ElectronicItem[] = [
     id: "monitor",
     name: "Monitor",
     icon: Monitor,
-    co2Saved: 120,
-    landfillReduced: 5.5,
-    energySaved: 180,
+    co2Saved: 80,
+    landfillReduced: 4,
+    energySaved: 120,
+    sizeOptions: [21, 24, 27, 32, 34, 49],
+    sizeMultiplier: (size: number) => {
+      // Base is 24 inches
+      return size / 24;
+    },
   },
   {
     id: "tv",
     name: "Television",
     icon: Tv,
-    co2Saved: 250,
-    landfillReduced: 12,
-    energySaved: 400,
+    co2Saved: 150,
+    landfillReduced: 8,
+    energySaved: 250,
+    sizeOptions: [32, 40, 43, 50, 55, 65, 75, 85],
+    sizeMultiplier: (size: number) => {
+      // Base is 43 inches
+      return size / 43;
+    },
   },
   {
     id: "headphones",
@@ -66,13 +83,13 @@ export const electronicItems: ElectronicItem[] = [
 ];
 
 export const Calculator = () => {
-  const [selectedItems, setSelectedItems] = useState<Map<string, number>>(new Map());
+  const [selectedItems, setSelectedItems] = useState<Map<string, SelectedItem>>(new Map());
   const [showResults, setShowResults] = useState(false);
 
-  const handleItemSelect = (itemId: string, quantity: number) => {
+  const handleItemSelect = (itemId: string, quantity: number, size?: number) => {
     const newSelected = new Map(selectedItems);
     if (quantity > 0) {
-      newSelected.set(itemId, quantity);
+      newSelected.set(itemId, { quantity, size });
     } else {
       newSelected.delete(itemId);
     }
@@ -84,12 +101,19 @@ export const Calculator = () => {
     let totalLandfill = 0;
     let totalEnergy = 0;
 
-    selectedItems.forEach((quantity, itemId) => {
+    selectedItems.forEach((selectedItem, itemId) => {
       const item = electronicItems.find((i) => i.id === itemId);
       if (item) {
-        totalCO2 += item.co2Saved * quantity;
-        totalLandfill += item.landfillReduced * quantity;
-        totalEnergy += item.energySaved * quantity;
+        let multiplier = 1;
+        
+        // Apply size multiplier if item has size options and a size is selected
+        if (item.sizeOptions && item.sizeMultiplier && selectedItem.size) {
+          multiplier = item.sizeMultiplier(selectedItem.size);
+        }
+        
+        totalCO2 += item.co2Saved * selectedItem.quantity * multiplier;
+        totalLandfill += item.landfillReduced * selectedItem.quantity * multiplier;
+        totalEnergy += item.energySaved * selectedItem.quantity * multiplier;
       }
     });
 
@@ -120,14 +144,19 @@ export const Calculator = () => {
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {electronicItems.map((item) => (
-              <ItemSelector
-                key={item.id}
-                item={item}
-                quantity={selectedItems.get(item.id) || 0}
-                onQuantityChange={(quantity) => handleItemSelect(item.id, quantity)}
-              />
-            ))}
+            {electronicItems.map((item) => {
+              const selectedItem = selectedItems.get(item.id);
+              return (
+                <ItemSelector
+                  key={item.id}
+                  item={item}
+                  quantity={selectedItem?.quantity || 0}
+                  selectedSize={selectedItem?.size}
+                  onQuantityChange={(quantity) => handleItemSelect(item.id, quantity, selectedItem?.size)}
+                  onSizeChange={(size) => handleItemSelect(item.id, selectedItem?.quantity || 1, size)}
+                />
+              );
+            })}
           </div>
 
           <div className="flex gap-4 justify-center pt-4">

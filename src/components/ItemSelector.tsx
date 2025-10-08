@@ -1,17 +1,21 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Minus } from "lucide-react";
 import type { ElectronicItem } from "./Calculator";
 
 interface ItemSelectorProps {
   item: ElectronicItem;
   quantity: number;
+  selectedSize?: number;
   onQuantityChange: (quantity: number) => void;
+  onSizeChange?: (size: number) => void;
 }
 
-export const ItemSelector = ({ item, quantity, onQuantityChange }: ItemSelectorProps) => {
+export const ItemSelector = ({ item, quantity, selectedSize, onQuantityChange, onSizeChange }: ItemSelectorProps) => {
   const Icon = item.icon;
   const isSelected = quantity > 0;
+  const hasSize = item.sizeOptions && item.sizeOptions.length > 0;
 
   return (
     <Card
@@ -31,6 +35,26 @@ export const ItemSelector = ({ item, quantity, onQuantityChange }: ItemSelectorP
             <Icon className="w-8 h-8" />
           </div>
           <h3 className="font-semibold text-center">{item.name}</h3>
+          
+          {hasSize && isSelected && (
+            <div className="w-full">
+              <Select
+                value={selectedSize?.toString() || ""}
+                onValueChange={(value) => onSizeChange?.(parseInt(value))}
+              >
+                <SelectTrigger className="w-full bg-background">
+                  <SelectValue placeholder="Select size" />
+                </SelectTrigger>
+                <SelectContent className="bg-popover z-50">
+                  {item.sizeOptions!.map((size) => (
+                    <SelectItem key={size} value={size.toString()}>
+                      {size}" inches
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           
           {isSelected ? (
             <div className="flex items-center gap-3">
